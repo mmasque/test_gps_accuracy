@@ -31,20 +31,20 @@ class AveragePoint():
 	
 	def test_gps_accuracy(self, data):
 		"Takes in gps message data and tests accuracy when walking along a line"
-		self.locs.append((data.latitude, data.longitude))
-		self.total_lat += data.latitude
-		self.total_long += data.longitude
-		self.count += 1
-		self.set_averages()
+		if (data.latitude, data.longitude) != (0.0,0.0):
+			self.locs.append((data.latitude, data.longitude))
+			self.total_lat += data.latitude
+			self.total_long += data.longitude
+			self.count += 1
+			self.set_averages()
 
 	def listen_gps_data(self, topic_name, point):
 		rospy.init_node('gps_listener', disable_signals=True)
 		rospy.Subscriber(topic_name, NavSatFix, self.test_gps_accuracy)
 		rate = rospy.Rate(1)
 		while not (rospy.is_shutdown()):
-			rospy.loginfo(self.count)
-			
-			if self.count > 60:
+			rospy.loginfo(self.count)			
+			if self.count > 240:
 				return
 			rate.sleep()			
 class PointList():
@@ -71,7 +71,7 @@ def get_average_point():
 	point.listen_gps_data('ant_gps', point)
 	avg = point.avg_lat, point.avg_long
 	rospy.loginfo(avg)
-	return avg
+	return avg,point.locs 
 def get_list_of_points():
 	points = PointList()
 	points.listen_gps_data('ant_gps', points)
@@ -80,7 +80,9 @@ def get_list_of_points():
 	return lst
 
 A = get_average_point()
-raw_input("press anything to continue when at point B: ")
-B= get_average_point()
-raw_input("press anything to begin walk: ")
-points_along_BA = get_list_of_points()
+
+with open("log240_1.txt", "w") as f:
+	print(A)
+	f.write(str(A[0]))
+	f.write(str(A[1]))
+	f.write("\n")
